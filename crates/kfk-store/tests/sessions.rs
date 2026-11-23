@@ -28,10 +28,14 @@ fn sessions_and_their_spend() {
     assert!(s.spend_by_hour("cos", 12.0 * 3600.0).unwrap().is_empty());
     s.event(Some(7), "note", "first");
     s.event(None, "rotate", "second");
-    let ev = s.events_recent(10).unwrap();
+    let ev = s.events_page(0, 10).unwrap();
     assert_eq!((ev[0].1, ev[0].3.as_str(), ev[0].4.as_str()), (None, "rotate", "second"));
     assert_eq!((ev[1].1, ev[1].3.as_str()), (Some(7), "note"));
-    assert_eq!(s.events_recent(1).unwrap().len(), 1);
+    assert_eq!(s.events_page(0, 1).unwrap().len(), 1);
+    // a later page starts further back; the count is of everything
+    assert_eq!(s.events_page(1, 1).unwrap()[0].4, "first");
+    assert!(s.events_page(2, 10).unwrap().is_empty());
+    assert_eq!(s.events_count().unwrap(), 2);
     // open and closed sessions; a resume re-opens and moves the slot
     assert_eq!(s.sessions(true).unwrap().len(), 2);
     s.session_end("a").unwrap();

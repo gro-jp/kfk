@@ -106,10 +106,30 @@ fn accounts_show_live_windows_and_who_is_on_them() {
 #[test]
 fn history_takes_a_sane_period() {
     let w = world();
-    assert_eq!(history(&w.s, 7.0).unwrap().days, 7.0);
-    assert_eq!(history(&w.s, -1.0).unwrap().days, 1.0);
-    assert_eq!(history(&w.s, f64::NAN).unwrap().days, 1.0);
-    assert_eq!(history(&w.s, 1e9).unwrap().days, 3650.0);
-    let h = history(&w.s, 1.0).unwrap();
+    assert_eq!(history(&w.s, 7.0, None).unwrap().days, 7.0);
+    assert_eq!(history(&w.s, -1.0, None).unwrap().days, 1.0);
+    assert_eq!(history(&w.s, f64::NAN, None).unwrap().days, 1.0);
+    assert_eq!(history(&w.s, 1e9, None).unwrap().days, 3650.0);
+    let h = history(&w.s, 1.0, None).unwrap();
     assert!(h.events.len() > 10 && h.summary.runs == 2);
+}
+
+#[test]
+fn history_shows_events_a_page_at_a_time_newest_first() {
+    let w = world();
+    let before = w.s.events_count().unwrap() as usize;
+    for i in 0..(2 * EVENTS_PER_PAGE) { w.s.event(None, "note", &format!("n{i}")); }
+    let total = before + 2 * EVENTS_PER_PAGE;
+    // no page asked: the newest
+    let h = history(&w.s, 1.0, None).unwrap();
+    assert_eq!((h.paging.page, h.paging.total, h.events.len()), (1, total, EVENTS_PER_PAGE));
+    assert_eq!(h.paging.pages, total.div_ceil(EVENTS_PER_PAGE));
+    assert_eq!(h.events[0].4, format!("n{}", 2 * EVENTS_PER_PAGE - 1));
+    // the second page carries on where the first stopped
+    let h2 = history(&w.s, 1.0, Some(2)).unwrap();
+    assert_eq!((h2.paging.page, h2.events[0].4.clone()), (2, format!("n{}", EVENTS_PER_PAGE - 1)));
+    // the last page holds the oldest events; a page past the end is the last one
+    let last = history(&w.s, 1.0, Some(9999)).unwrap();
+    assert_eq!((last.paging.page, last.events.len()), (last.paging.pages, total - (last.paging.pages - 1) * EVENTS_PER_PAGE));
+    assert_eq!(history(&w.s, 1.0, Some(0)).unwrap().paging.page, 1);
 }

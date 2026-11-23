@@ -6,7 +6,8 @@ use kfk_util::ktok;
 use maud::{html, Markup};
 
 pub fn history_page(h: &History) -> Markup {
-    let r = &h.summary;
+    let (r, p) = (&h.summary, h.paging);
+    let link = |page: usize| format!("/history?days={}&page={page}#h-events", h.days);
     html! {
         h1 { "History" }
         nav.pager aria-label="Period" { "Period: " @for d in [1.0, 7.0, 30.0, 365.0] { a href=(format!("/history?days={d}")) aria-current=[(d == h.days).then_some("true")] { (d) " day" @if d > 1.0 { "s" } } " " } }
@@ -36,6 +37,14 @@ pub fn history_page(h: &History) -> Markup {
             }
         }
         section aria-labelledby="h-events" { h2 #h-events { "Events, newest first" }
+            @if p.total > 0 { p.hint { "Events " (p.from + 1) " to " (p.to) " of " (p.total) "." } }
+            @if p.pages > 1 {
+                nav.pager aria-label="Event pages" {
+                    @if p.page > 1 { a href=(link(1)) { "« Newest" } " " a rel="prev" href=(link(p.page - 1)) { "‹ Newer" } }
+                    " " span { "Page " (p.page) " of " (p.pages) } " "
+                    @if p.page < p.pages { a rel="next" href=(link(p.page + 1)) { "Older ›" } " " a href=(link(p.pages)) { "Oldest »" } }
+                }
+            }
             @if h.events.is_empty() { (empty("Nothing has happened yet.")) }
             @else { ol.events { @for (ts, task, actor, kind, data) in &h.events { li { (clock(Some(*ts))) " " span.badge.st-off { (kind) } " " span.muted { (actor) } " " @if let Some(t) = task { (task_link(*t)) " " } (data) } } } }
         }
