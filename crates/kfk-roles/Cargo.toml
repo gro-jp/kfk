@@ -1,0 +1,10 @@
+[package]
+name = "kfk-roles"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "kfk: the role prompts of cos, orchestrators and agents"
+
+[dependencies]

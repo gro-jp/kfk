@@ -1,0 +1,13 @@
+[package]
+name = "kfk-util"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "kfk: small shared helpers"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+libc = "0.2"

@@ -1,0 +1,22 @@
+[package]
+name = "kfk-mizan"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "kfk: mizan, the zero-LLM layer that owns nodes and the accounts they run on"
+
+[dependencies]
+anyhow = "1"
+libc = "0.2"
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+kfk-engine = { path = "../kfk-engine" }
+kfk-logs = { path = "../kfk-logs" }
+kfk-spend = { path = "../kfk-spend" }
+kfk-roles = { path = "../kfk-roles" }
+kfk-store = { path = "../kfk-store" }
+kfk-token = { path = "../kfk-token" }
+kfk-usage = { path = "../kfk-usage" }
+kfk-util = { path = "../kfk-util" }

@@ -1,0 +1,10 @@
+[package]
+name = "kfk-route"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "kfk: model and effort for an attempt, from the task class ladder"
+
+[dependencies]
