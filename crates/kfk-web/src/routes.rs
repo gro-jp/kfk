@@ -87,7 +87,7 @@ async fn accounts(State(a): State<App>) -> Response {
     render(a, |s, _| Ok(p::layout("Accounts", "/accounts", p::accounts_page(&m::accounts(s)?)))).await
 }
 async fn history(State(a): State<App>, Query(q): Q) -> Response {
-    render(a, move |s, _| Ok(p::layout("History", "/history", p::history_page(&m::history(s, q.get("days").and_then(|d| d.parse().ok()).unwrap_or(1.0))?)))).await
+    render(a, move |s, _| Ok(p::layout("History", "/history", p::history_page(&m::history(s, q.get("days").and_then(|d| d.parse().ok()).unwrap_or(1.0), q.get("page").and_then(|n| n.parse().ok()))?)))).await
 }
 async fn css() -> Response {
     ([(header::CONTENT_TYPE, "text/css; charset=utf-8"), (header::CACHE_CONTROL, "no-cache")], include_str!("assets/app.css")).into_response()

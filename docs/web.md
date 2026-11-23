@@ -77,6 +77,9 @@ The pool: each account's usage windows as bars, when they reset, and who is on i
 Numbers for the last 1, 7, 30 or 365 days (`/history?days=7`): node spend, agent runs by class and model with
 pass rates, the streams touched, and the event log (starts, stops, rotations, swaps, notes, results).
 
+The event log covers everything ever recorded, newest first, 50 events to a page (`/history?days=7&page=2`). The
+period applies to the numbers above it, not to the event log.
+
 ## Transcripts
 
 Transcripts are shown as a conversation: prompts, Claude's text, tool calls, results. Long or noisy entries

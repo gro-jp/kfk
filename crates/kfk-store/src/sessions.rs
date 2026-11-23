@@ -58,7 +58,11 @@ impl Store {
         Ok(v)
     }
     /// every event, newest first
-    pub fn events_recent(&self, limit: i64) -> Result<Vec<crate::model::EventRow>> {
-        self.list("select ts,task,actor,kind,data from events order by id desc limit ?1", [limit], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)))
+    /// newest first: `limit` events after skipping the `offset` newest
+    pub fn events_page(&self, offset: i64, limit: i64) -> Result<Vec<crate::model::EventRow>> {
+        self.list("select ts,task,actor,kind,data from events order by id desc limit ?2 offset ?1", [offset, limit], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)))
+    }
+    pub fn events_count(&self) -> Result<i64> {
+        Ok(self.c.query_row("select count(*) from events", [], |r| r.get(0))?)
     }
 }

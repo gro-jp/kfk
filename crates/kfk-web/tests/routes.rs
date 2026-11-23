@@ -61,6 +61,8 @@ async fn every_page_renders_and_drills_down() {
     let (st, h) = get(&app, "/history?days=7").await;
     assert!(st == StatusCode::OK && h.contains("Events, newest first") && h.contains("Agent runs by class and model") && h.contains("Node spend") && h.contains("Streams touched"));
     assert_eq!(get(&app, "/history?days=junk").await.0, StatusCode::OK);
+    assert!(!h.contains("Event pages")); // one page: no pager
+    assert_eq!(get(&app, "/history?page=junk").await.0, StatusCode::OK);
 
     for (path, status) in [("/task/9999", 404), ("/task/abc", 404), ("/run/9999", 404), ("/node/o9", 404), ("/session/none", 404), ("/nothing", 404)] {
         let (st, body) = get(&app, path).await;

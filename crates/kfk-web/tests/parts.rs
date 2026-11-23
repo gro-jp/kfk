@@ -1,7 +1,8 @@
 mod common;
 use common::*;
 use kfk_web::page::parts::*;
-use kfk_web::page::log_part;
+use kfk_web::model::{history, EVENTS_PER_PAGE};
+use kfk_web::page::{history_page, log_part};
 use kfk_web::source::log;
 
 #[test]
@@ -48,4 +49,23 @@ fn a_long_transcript_is_paged_oldest_to_newest() {
     assert!(h.contains("<details>") && h.contains("2 lines") && h.contains("! error") && !h.contains("Page 1 of"));
     let none = log_part(&log(&s, &p, "/gone", None, false), "/run/1").into_string();
     assert!(none.contains("Nothing to show on this page."));
+}
+
+#[test]
+fn the_history_pager_walks_from_newest_to_oldest_and_keeps_the_period() {
+    let w = world();
+    // few events: a count, no pager
+    let one = history_page(&history(&w.s, 7.0, None).unwrap()).into_string();
+    assert!(one.contains(" of ") && !one.contains("Event pages"));
+    let extra = 3 * EVENTS_PER_PAGE - w.s.events_count().unwrap() as usize;
+    for i in 0..extra { w.s.event(None, "note", &format!("n{i}")); }
+    let page = |n| history_page(&history(&w.s, 7.0, n).unwrap()).into_string();
+    let first = page(None);
+    assert!(first.contains("Events 1 to 50 of 150.") && first.contains("Page 1 of 3"));
+    assert!(first.contains("/history?days=7&amp;page=2#h-events") && first.contains("Oldest »") && !first.contains("Newest"));
+    let mid = page(Some(2));
+    assert!(mid.contains("Events 51 to 100 of 150.") && mid.contains("‹ Newer") && mid.contains("Older ›"));
+    assert!(mid.contains("page=1#h-events") && mid.contains("page=3#h-events"));
+    let last = page(Some(3));
+    assert!(last.contains("Events 101 to 150 of 150.") && last.contains("« Newest") && !last.contains("Older"));
 }
