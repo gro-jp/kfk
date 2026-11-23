@@ -1,0 +1,12 @@
+#!/bin/bash
+# a stand-in for `claude` in end-to-end tests: with -p it is an agent, without it a node that just stays up
+case " $* " in
+  *" -p "*)
+    p=$(cat)
+    if echo "$p" | grep -q FLAKY && ! echo "$p" | grep -q 'previous attempt'; then echo wrong > out.txt; else echo good > out.txt; fi
+    git add -A >/dev/null 2>&1; git -c user.email=t@t -c user.name=t commit -qm agent >/dev/null 2>&1
+    echo '{"type":"assistant","timestamp":"2026-11-22T10:00:00.000Z","message":{"id":"m1","usage":{"input_tokens":1,"output_tokens":1}}}'
+    echo '{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","rateLimitType":"seven_day","utilization":0.2,"resetsAt":1999999999}}'
+    echo '{"type":"result","is_error":false,"num_turns":2,"total_cost_usd":0.01,"result":"did it","usage":{"input_tokens":10,"cache_creation_input_tokens":100,"cache_read_input_tokens":1000,"output_tokens":50}}' ;;
+  *) echo "fake node: $KFK_SEAT slot=$KFK_SLOT token=${CLAUDE_CODE_OAUTH_TOKEN:+set} args: $*"; sleep 100000 ;;
+esac

@@ -1,0 +1,23 @@
+[package]
+name = "kfk-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "kfk: running one short-lived agent per attempt in a git worktree, judged by the task's check"
+
+[dependencies]
+anyhow = "1"
+libc = "0.2"
+uuid = { version = "1", features = ["v4"] }
+kfk-route = { path = "../kfk-route" }
+kfk-roles = { path = "../kfk-roles" }
+kfk-store = { path = "../kfk-store" }
+kfk-stream = { path = "../kfk-stream" }
+kfk-token = { path = "../kfk-token" }
+kfk-usage = { path = "../kfk-usage" }
+kfk-util = { path = "../kfk-util" }
+
+[dev-dependencies]
+uuid = { version = "1", features = ["v4"] }

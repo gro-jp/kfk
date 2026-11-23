@@ -1,0 +1,15 @@
+[package]
+name = "kfk-logs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "kfk: the PostgreSQL archive of every Claude session transcript and agent stream"
+
+[dependencies]
+anyhow = "1"
+postgres = { version = "0.19", features = ["with-serde_json-1"] }
+serde_json = "1"
+kfk-util = { path = "../kfk-util" }
+kfk-store = { path = "../kfk-store" }
