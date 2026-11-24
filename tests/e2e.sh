@@ -18,6 +18,7 @@ sqlite3 "$KFK_HOME/kfk.db" 'select 1' >/dev/null 2>&1; $K config mizan_every 1 >
 PORT=$((20000 + $$ % 20000)); $K config web_addr 127.0.0.1:$PORT >/dev/null
 sqlite3 "$KFK_HOME/kfk.db" "insert into accounts(slot,label,minted) values(0,'a@x','2026-11-22'),(1,'b@x','2026-11-22')"
 ok "accounts lists both slots" '[ "$($K accounts | grep -c "@x")" = 2 ]'
+ok "--version prints the release number" '$K --version | grep -qE "^kfk [0-9]\.[0-9]{1,2}\.[0-9]{1,2}$"'
 
 $K up --dir "$T/repo" >/dev/null
 ok "up starts cos and mizan" '$K status | grep -qE "^cos +up" && $K mizan | grep -q running'

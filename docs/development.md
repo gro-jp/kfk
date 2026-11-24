@@ -140,6 +140,18 @@ export KFK_HOME=/tmp/kfk-play KFK_CLAUDE=$PWD/tests/fake-claude KFK_TOKEN_FILE=/
 kfk up --dir /tmp/some-git-repo
 ```
 
+## Releasing
+
+Versions are `v<0-9>.<0-99>.<0-99>`, for example `v0.0.1`. The number lives in one place, `version` under
+`[workspace.package]` in `Cargo.toml`; `kfk --version` prints it.
+
+1. In a pull request: set the version, run `cargo build` so `Cargo.lock` follows, and add a section to
+   [`CHANGELOG.md`](../CHANGELOG.md).
+2. After it is merged and `tests/coverage.sh` passes on `main`, tag that commit `v<version>` and publish a GitHub
+   release from the tag, with the changelog section as its notes.
+
+Releases are source only: install with `./install.sh` from the tagged tree.
+
 ## Layout
 
 ```

@@ -1,6 +1,7 @@
 # Commands
 
-`kfk -h` lists every command; `kfk <command> -h` shows its flags. Task ids are accepted as `7` or `T7`.
+`kfk -h` lists every command; `kfk <command> -h` shows its flags; `kfk --version` prints the version. Task ids
+are accepted as `7` or `T7`.
 
 Output is plain text in aligned columns, made to be piped. Commands that list things have `--json` where a script
 would want it. A closed pipe (`kfk task ls | head -3`) ends kfk quietly.

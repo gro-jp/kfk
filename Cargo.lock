@@ -670,7 +670,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-cli"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -689,7 +689,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-engine"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "kfk-roles",
@@ -705,7 +705,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-logs"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "kfk-store",
@@ -716,7 +716,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-mizan"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "kfk-engine",
@@ -734,7 +734,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-report"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "kfk-store",
@@ -745,15 +745,15 @@ dependencies = [
 
 [[package]]
 name = "kfk-roles"
-version = "0.1.0"
+version = "0.0.1"
 
 [[package]]
 name = "kfk-route"
-version = "0.1.0"
+version = "0.0.1"
 
 [[package]]
 name = "kfk-spend"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "chrono",
  "serde",
@@ -762,7 +762,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-store"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "kfk-stream",
@@ -776,7 +776,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-stream"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "kfk-usage",
  "kfk-util",
@@ -786,7 +786,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-term"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "libc",
@@ -795,7 +795,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-token"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "regex",
@@ -805,7 +805,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-usage"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -813,7 +813,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-util"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -822,7 +822,7 @@ dependencies = [
 
 [[package]]
 name = "kfk-web"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "axum",
