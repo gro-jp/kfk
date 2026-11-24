@@ -7,7 +7,7 @@ pub fn tid(s: &str) -> Result<i64, String> {
 }
 
 #[derive(Parser)]
-#[command(name = "kfk", about = "kun fayakoon: a chief of staff, orchestrators on demand, short-lived agents, one local state store")]
+#[command(name = "kfk", version, about = "kun fayakoon: a chief of staff, orchestrators on demand, short-lived agents, one local state store")]
 pub struct Cli {
     #[command(subcommand)]
     pub cmd: Cmd,

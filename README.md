@@ -136,8 +136,8 @@ mizan then picks the account with the most headroom for every session and agent.
 
 ## Status
 
-Version 0.1.0. kfk is young: it has run real goals end to end on macOS with a pool of accounts, but only on small
-streams so far. Known gaps:
+Version 0.0.1 ([changes](CHANGELOG.md)). kfk is young: it has run real goals end to end on macOS with a pool of
+accounts, but only on small streams so far. Known gaps:
 
 - **macOS only.** The token vault is the Keychain.
 - **The web interface acts only through terminals.** Each node has a live terminal in the browser; there are no
