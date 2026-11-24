@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""a tiny WebSocket client for the end-to-end test: open a node's terminal, wait for some text on its screen,
+type a line, and wait for it to be echoed.   ws-type <port> <seat> <wait-for> <type>"""
+import base64, json, os, socket, struct, sys, time
+
+port, seat, wait_for, typed = int(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
+s = socket.create_connection(("127.0.0.1", port), timeout=10)
+host = "127.0.0.1:%d" % port
+s.sendall(("GET /ws/node/%s?cols=100&rows=30 HTTP/1.1\r\nHost: %s\r\nOrigin: http://%s\r\nUpgrade: websocket\r\n"
+           "Connection: Upgrade\r\nSec-WebSocket-Key: %s\r\nSec-WebSocket-Version: 13\r\n\r\n"
+           % (seat, host, host, base64.b64encode(os.urandom(16)).decode())).encode())
+buf = b""
+while b"\r\n\r\n" not in buf:
+    buf += s.recv(4096)
+head, buf = buf.split(b"\r\n\r\n", 1)
+if b" 101 " not in head.split(b"\r\n")[0]:
+    sys.exit("no upgrade: %r" % head[:200])
+
+def send(op, data):
+    mask = os.urandom(4)
+    n = len(data)
+    size = bytes([0x80 | n]) if n < 126 else bytes([0x80 | 126]) + struct.pack(">H", n)
+    s.sendall(bytes([0x80 | op]) + size + mask + bytes(b ^ mask[i % 4] for i, b in enumerate(data)))
+
+def frames(until, seconds):
+    """read frames into the screen text until `until` is in it"""
+    global buf
+    seen, end = "", time.time() + seconds
+    s.settimeout(0.5)
+    while until not in seen and time.time() < end:
+        while len(buf) >= 2:
+            n, at = buf[1] & 0x7F, 2
+            if n == 126:
+                if len(buf) < 4: break
+                n, at = struct.unpack(">H", buf[2:4])[0], 4
+            elif n == 127:
+                if len(buf) < 10: break
+                n, at = struct.unpack(">Q", buf[2:10])[0], 10
+            if len(buf) < at + n: break
+            if buf[0] & 0x0F in (1, 2):
+                seen += buf[at:at + n].decode("utf-8", "replace")
+            buf = buf[at + n:]
+        if until in seen: break
+        try:
+            more = s.recv(65536)
+        except socket.timeout:
+            continue
+        if not more: break
+        buf += more
+    return seen
+
+if wait_for not in frames(wait_for, 10):
+    sys.exit("the screen never showed %r" % wait_for)
+send(1, json.dumps({"cols": 90, "rows": 28}).encode())
+send(2, typed.encode() + b"\r")
+if typed not in frames(typed, 10):
+    sys.exit("what was typed never came back")
+send(8, b"")
+print("typed")

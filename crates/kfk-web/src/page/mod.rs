@@ -8,6 +8,7 @@ mod overview;
 pub mod parts;
 mod run;
 mod task;
+mod term;
 
 pub use accounts::*;
 pub use history::*;
@@ -17,3 +18,4 @@ pub use node::*;
 pub use overview::*;
 pub use run::*;
 pub use task::*;
+pub use term::*;

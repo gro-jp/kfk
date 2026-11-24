@@ -1,6 +1,7 @@
 # Web interface
 
-A read-only view of the fleet: what needs you, what is running, what is stuck, what was done, and every transcript.
+A view of the fleet: what needs you, what is running, what is stuck, what was done, and every transcript. The
+pages only show; the one way to act is the [live terminal](#terminals) on each node.
 It is one process inside the `kfk` binary (Axum, Maud and HTMX); there is nothing else to install and no build
 step.
 
@@ -21,8 +22,8 @@ kfk web stop && kfk web start
 `kfk down` leaves the web view running, so history stays browsable while the fleet is down.
 
 > The web view has **no login**. It listens on localhost only by default. If you bind it to another address, anyone
-> who can reach that address can read every task, prompt and transcript. Put it behind something that
-> authenticates, or use an SSH tunnel: `ssh -L 7878:127.0.0.1:7878 your-machine`.
+> who can reach that address can read every task, prompt and transcript (terminals turn themselves off there). Put
+> it behind something that authenticates, or use an SSH tunnel: `ssh -L 7878:127.0.0.1:7878 your-machine`.
 
 ## Pages
 
@@ -61,8 +62,40 @@ output, and the full transcript.
 
 ### Nodes `/nodes` and `/node/<seat>`
 
-For one node: **what it is doing now** (the last lines of its screen, refreshed every 3 seconds), the open work it
-owns, its tokens by hour over the last day, and every session it has had.
+For one node: its **terminal**, the open work it owns, its tokens by hour over the last day, and every session it
+has had.
+
+## Terminals
+
+Every node has a live terminal: on its page (`/node/<seat>`), and alone on a page of its own (`/shell/<seat>`,
+linked as **Open** wherever nodes are listed). It is the node's real session, the same one `kfk attach` shows: what
+you type goes to it, and what it prints comes back.
+
+- **Full screen** fills the window with the terminal. In Chrome and Edge it also goes to real full screen with
+  Escape still reaching the node. In Safari and Firefox it fills the window only, because there Escape would leave
+  full screen instead of interrupting Claude.
+- **Scrolling:** the mouse wheel scrolls back through the node's history. Scroll back down to the bottom, or press
+  `q`, to type again.
+- **Selecting text:** hold Option (macOS) or Shift while dragging. Paste works as usual.
+- **Several viewers** can have the same node open, in browsers and in `kfk attach`; they see the same screen, at
+  the size of whichever viewer was active last. A web terminal does not change which window `kfk attach` shows,
+  nor its mouse or status-line settings.
+- **One terminal, one node.** If mizan restarts or moves the node, its terminal disconnects instead of showing
+  another node; **Connect** opens the new one.
+- Closing the page or losing the connection leaves the node running. **Connect** opens the terminal again.
+
+Who may type:
+
+- Terminals work only when the web view listens on this machine (`web_addr` on `127.0.0.1`, `localhost` or `::1`).
+  On any other address the node page shows the last lines of the screen instead, refreshed every 3 seconds.
+- The server refuses a terminal to a page from any other site, and to a request that names another host, so a web
+  page you happen to have open cannot type into a node.
+- `kfk config web_shell off` turns terminals off; `on` (the default) brings them back. It applies at once.
+- To use a terminal from another computer, tunnel to the loopback address:
+  `ssh -L 7878:127.0.0.1:7878 your-machine`, then open <http://127.0.0.1:7878>.
+
+There is no password. Any program running as any user on the machine can reach a loopback address; on a machine you
+share with people you do not trust, turn terminals off. See [Security](security.md#the-web-view).
 
 ### A session `/session/<id>`
 

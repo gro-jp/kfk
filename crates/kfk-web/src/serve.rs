@@ -7,10 +7,12 @@ use std::sync::Arc;
 
 /// serve until killed
 pub fn serve(kh: &str, addr: &str) -> Result<()> {
-    let app = App { kh: kh.to_string(), probe: Arc::new(Live) };
+    let kh = kh.to_string();
     tokio::runtime::Builder::new_multi_thread().enable_all().build()?.block_on(async move {
         let l = tokio::net::TcpListener::bind(addr).await.map_err(|e| anyhow::anyhow!("cannot listen on {addr}: {e}"))?;
-        println!("kfk web: http://{}", l.local_addr()?);
+        let at = l.local_addr()?;
+        let app = App { kh, probe: Arc::new(Live), local: at.ip().is_loopback() };
+        println!("kfk web: http://{at}{}", if app.local { "" } else { " (a network address: terminals are read-only)" });
         axum::serve(l, router(app)).await?;
         Ok(())
     })

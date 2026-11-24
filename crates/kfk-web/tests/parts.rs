@@ -2,7 +2,8 @@ mod common;
 use common::*;
 use kfk_web::page::parts::*;
 use kfk_web::model::{history, EVENTS_PER_PAGE};
-use kfk_web::page::{history_page, log_part};
+use kfk_web::page::{history_page, log_part, shell_page, term_part};
+use kfk_web::shell::ShellView;
 use kfk_web::source::log;
 
 #[test]
@@ -68,4 +69,24 @@ fn the_history_pager_walks_from_newest_to_oldest_and_keeps_the_period() {
     assert!(mid.contains("page=1#h-events") && mid.contains("page=3#h-events"));
     let last = page(Some(3));
     assert!(last.contains("Events 101 to 150 of 150.") && last.contains("« Newest") && !last.contains("Older"));
+}
+
+#[test]
+fn the_terminal_component_says_what_it_is_and_how_to_use_it() {
+    let t = term_part("o1", true, false).into_string();
+    for needle in ["data-term=\"o1\"", "data-auto=\"1\"", "role=\"status\"", "Full screen", "href=\"/shell/o1\"", "mouse wheel scrolls", "/assets/xterm.js", "/assets/term.js", "needs JavaScript"] {
+        assert!(t.contains(needle), "{needle:?}");
+    }
+    assert!(!t.contains("term-max"));
+    let alone = term_part("cos", false, true).into_string();
+    assert!(alone.contains("term-max") && alone.contains("data-auto=\"0\"") && alone.contains("Back to cos") && !alone.contains("Full screen"));
+}
+
+#[test]
+fn the_terminal_page_is_the_terminal_or_the_reason_there_is_none() {
+    let page = |state: &str, usable| shell_page(&ShellView { seat: "o1".into(), state: state.into(), usable }).into_string();
+    assert!(page("up", Ok(())).contains("data-auto=\"1\"") && page("dead", Ok(())).contains("data-auto=\"1\""));
+    assert!(page("stopped", Ok(())).contains("data-auto=\"0\""));
+    let off = page("up", Err("Terminals are turned off."));
+    assert!(off.contains("Terminals are turned off.") && !off.contains("data-term") && off.contains("href=\"/node/o1\""));
 }

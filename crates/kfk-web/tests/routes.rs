@@ -8,7 +8,15 @@ use std::sync::Arc;
 use tower::ServiceExt;
 
 async fn get(app: &App, path: &str) -> (StatusCode, String) {
-    let r = router(app.clone()).oneshot(Request::builder().uri(path).body(Body::empty()).unwrap()).await.unwrap();
+    get_with(app, path, &[]).await
+}
+
+async fn get_with(app: &App, path: &str, headers: &[(&str, &str)]) -> (StatusCode, String) {
+    let mut req = Request::builder().uri(path);
+    for (k, v) in headers {
+        req = req.header(*k, *v);
+    }
+    let r = router(app.clone()).oneshot(req.body(Body::empty()).unwrap()).await.unwrap();
     let status = r.status();
     (status, String::from_utf8(r.into_body().collect().await.unwrap().to_bytes().to_vec()).unwrap())
 }
@@ -16,7 +24,7 @@ async fn get(app: &App, path: &str) -> (StatusCode, String) {
 #[tokio::test]
 async fn every_page_renders_and_drills_down() {
     let w = world();
-    let app = App { kh: w.s.kh.clone(), probe: Arc::new(Fake::default()) };
+    let app = App { kh: w.s.kh.clone(), probe: Arc::new(Fake::default()), local: true };
     let (st, home) = get(&app, "/").await;
     assert_eq!(st, StatusCode::OK);
     for needle in ["<!DOCTYPE html>", "<html lang=\"en\">", "Skip to content", "aria-current=\"page\"", "hx-get=\"/part/overview\"", "Needs you", "accept the folder trust dialog", "needs owner: which region?", "stream in flight", "In flight", "Stuck", "Planned", "Queued", "a running child", "role=\"meter\"", "coordination share", "one@x"] {
@@ -46,7 +54,7 @@ async fn every_page_renders_and_drills_down() {
     assert!(st == StatusCode::OK && n.contains("/node/o2") && n.contains("stopped"));
     let (st, cos) = get(&app, "/node/cos").await;
     assert_eq!(st, StatusCode::OK);
-    for needle in ["chief of staff", "working on T1", "/session/sid-cos", "Tokens by hour", "hx-get=\"/part/node/cos\""] {
+    for needle in ["chief of staff", "data-term=\"cos\"", "/session/sid-cos", "Tokens by hour", "hx-get=\"/part/node/cos\""] {
         assert!(cos.contains(needle), "node page lacks {needle:?}");
     }
     let (_, o1) = get(&app, "/node/o1").await;
@@ -77,7 +85,7 @@ async fn every_page_renders_and_drills_down() {
 #[tokio::test]
 async fn an_empty_home_explains_itself_and_a_broken_one_is_an_error_page() {
     let s = kfk_store::Store::temp();
-    let app = App { kh: s.kh.clone(), probe: Arc::new(Fake { up: false, ..Default::default() }) };
+    let app = App { kh: s.kh.clone(), probe: Arc::new(Fake { up: false, ..Default::default() }), local: true };
     let (st, home) = get(&app, "/").await;
     assert_eq!(st, StatusCode::OK);
     for needle in ["Nothing is waiting for you.", "No node has been started yet", "No agent is running.", "No stream yet. Give cos a goal."] {
@@ -86,7 +94,67 @@ async fn an_empty_home_explains_itself_and_a_broken_one_is_an_error_page() {
     assert!(get(&app, "/nodes").await.1.contains("No node has been started yet."));
     assert!(get(&app, "/accounts").await.1.contains("The pool is empty"));
     assert!(get(&app, "/history").await.1.contains("History"));
-    let broken = App { kh: "/dev/null/nope".into(), probe: Arc::new(Fake::default()) };
+    let broken = App { kh: "/dev/null/nope".into(), probe: Arc::new(Fake::default()), local: true };
     let (st, body) = get(&broken, "/").await;
     assert!(st == StatusCode::INTERNAL_SERVER_ERROR && body.contains("Something failed"));
+}
+
+const HOST: (&str, &str) = ("host", "127.0.0.1:7878");
+
+#[tokio::test]
+async fn a_node_page_holds_a_live_terminal_and_the_assets_it_needs() {
+    let w = world();
+    let app = App { kh: w.s.kh.clone(), probe: Arc::new(Fake::default()), local: true };
+    let (st, n) = get(&app, "/node/cos").await;
+    assert!(st == StatusCode::OK && n.contains("data-term=\"cos\"") && n.contains("data-auto=\"1\"") && n.contains("Full screen"));
+    assert!(!n.contains("pre class=\"pane\"")); // the live terminal replaces the still picture
+    assert!(!get(&app, "/part/node/cos").await.1.contains("data-term")); // the refreshed part never replaces the terminal
+    assert!(get(&app, "/").await.1.contains("href=\"/shell/cos\""));
+    let (st, alone) = get(&app, "/shell/o1").await;
+    assert!(st == StatusCode::OK && alone.contains("data-term=\"o1\"") && alone.contains("term-max") && alone.contains("Back to o1"));
+    assert!(get(&app, "/shell/o2").await.1.contains("data-auto=\"0\"")); // stopped: it does not try to connect
+    assert_eq!(get(&app, "/shell/o9").await.0, StatusCode::NOT_FOUND);
+    for (path, needle) in [("/assets/xterm.js", "Terminal"), ("/assets/xterm-addon-fit.js", "FitAddon"), ("/assets/xterm.css", ".xterm"), ("/assets/term.js", "data-term")] {
+        let (st, body) = get(&app, path).await;
+        assert!(st == StatusCode::OK && body.contains(needle), "{path}");
+    }
+}
+
+#[tokio::test]
+async fn a_terminal_request_is_refused_with_its_reason_unless_it_is_ours() {
+    let w = world();
+    let app = App { kh: w.s.kh.clone(), probe: Arc::new(Fake::default()), local: true };
+    // admitted, but not a WebSocket
+    let (st, why) = get_with(&app, "/ws/node/cos", &[HOST, ("origin", "http://127.0.0.1:7878")]).await;
+    assert!(st == StatusCode::UPGRADE_REQUIRED && why.contains("WebSocket"));
+    assert_eq!(get_with(&app, "/ws/node/cos?cols=90&rows=30", &[HOST]).await.0, StatusCode::UPGRADE_REQUIRED);
+    // another site's page, a foreign host name, no host
+    let (st, why) = get_with(&app, "/ws/node/cos", &[HOST, ("origin", "https://evil.example")]).await;
+    assert!(st == StatusCode::FORBIDDEN && why.contains("own pages"));
+    assert_eq!(get_with(&app, "/ws/node/cos", &[("host", "evil.example:7878"), ("origin", "http://evil.example:7878")]).await.0, StatusCode::FORBIDDEN);
+    assert_eq!(get(&app, "/ws/node/cos").await.0, StatusCode::FORBIDDEN);
+    // no such node, a stopped node
+    assert_eq!(get_with(&app, "/ws/node/o9", &[HOST]).await.0, StatusCode::NOT_FOUND);
+    let (st, why) = get_with(&app, "/ws/node/o2", &[HOST]).await;
+    assert!(st == StatusCode::CONFLICT && why.contains("o2 is stopped"));
+    // a broken home is an error, not a terminal
+    let broken = App { kh: "/dev/null/nope".into(), probe: Arc::new(Fake::default()), local: true };
+    assert_eq!(get_with(&broken, "/ws/node/cos", &[HOST]).await.0, StatusCode::INTERNAL_SERVER_ERROR);
+}
+
+#[tokio::test]
+async fn on_a_network_address_or_switched_off_the_view_stays_read_only() {
+    let w = world();
+    let net = App { kh: w.s.kh.clone(), probe: Arc::new(Fake::default()), local: false };
+    let (st, n) = get(&net, "/node/cos").await;
+    assert!(st == StatusCode::OK && !n.contains("data-term") && n.contains("pre class=\"pane\"") && n.contains("working on T1") && n.contains("network address"));
+    assert!(get(&net, "/part/node/cos").await.1.contains("network address"));
+    let (st, alone) = get(&net, "/shell/cos").await;
+    assert!(st == StatusCode::OK && !alone.contains("data-term") && alone.contains("network address"));
+    assert_eq!(get_with(&net, "/ws/node/cos", &[HOST]).await.0, StatusCode::FORBIDDEN);
+    let app = App { kh: w.s.kh.clone(), probe: Arc::new(Fake::default()), local: true };
+    w.s.set_cfg("web_shell", "off").unwrap();
+    let (st, why) = get_with(&app, "/ws/node/cos", &[HOST]).await;
+    assert!(st == StatusCode::FORBIDDEN && why.contains("kfk config web_shell on"));
+    assert!(get(&app, "/node/cos").await.1.contains("turned off"));
 }

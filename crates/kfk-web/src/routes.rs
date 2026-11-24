@@ -16,6 +16,8 @@ use std::sync::Arc;
 pub struct App {
     pub kh: String,
     pub probe: Arc<dyn Probe>,
+    /// the server listens on a loopback address, so terminals may be offered
+    pub local: bool,
 }
 
 type Q = Query<HashMap<String, String>>;
@@ -71,10 +73,16 @@ async fn nodes(State(a): State<App>) -> Response {
     render(a, |s, pr| Ok(p::layout("Nodes", "/nodes", p::nodes_page(&m::nodes(s, pr)?)))).await
 }
 async fn node(State(a): State<App>, Path(n): Path<String>) -> Response {
-    render(a, move |s, pr| Ok(p::layout(&n, "/nodes", p::node_page(&m::node_view(s, pr, &n)?)))).await
+    let local = a.local;
+    render(a, move |s, pr| Ok(p::layout(&n, "/nodes", p::node_page(&m::node_view(s, pr, local, &n)?)))).await
+}
+async fn shell(State(a): State<App>, Path(n): Path<String>) -> Response {
+    let local = a.local;
+    render(a, move |s, pr| Ok(p::shell_page(&crate::shell::shell_view(s, pr, local, &n)?))).await
 }
 async fn node_part(State(a): State<App>, Path(n): Path<String>) -> Response {
-    render(a, move |s, pr| Ok(p::node_part(&m::node_view(s, pr, &n)?))).await
+    let local = a.local;
+    render(a, move |s, pr| Ok(p::node_part(&m::node_view(s, pr, local, &n)?))).await
 }
 async fn session(State(a): State<App>, Path(sid): Path<String>, Query(q): Q) -> Response {
     render(a, move |s, pr| {
@@ -95,6 +103,23 @@ async fn css() -> Response {
 async fn htmx() -> Response {
     ([(header::CONTENT_TYPE, "text/javascript; charset=utf-8"), (header::CACHE_CONTROL, "max-age=86400")], include_str!("assets/htmx.min.js")).into_response()
 }
+/// a bundled library is kept by the browser for a day; kfk's own script is always fetched fresh
+fn asset(kind: &'static str, keep: bool, body: &'static str) -> Response {
+    ([(header::CONTENT_TYPE, kind), (header::CACHE_CONTROL, if keep { "max-age=86400" } else { "no-cache" })], body).into_response()
+}
+const JS: &str = "text/javascript; charset=utf-8";
+async fn xterm() -> Response {
+    asset(JS, true, include_str!("assets/xterm.js"))
+}
+async fn xterm_fit() -> Response {
+    asset(JS, true, include_str!("assets/xterm-addon-fit.js"))
+}
+async fn term_js() -> Response {
+    asset(JS, false, include_str!("assets/term.js"))
+}
+async fn xterm_css() -> Response {
+    asset("text/css; charset=utf-8", true, include_str!("assets/xterm.css"))
+}
 async fn missing() -> Response {
     (StatusCode::NOT_FOUND, p::error_page(404, "There is no such page.")).into_response()
 }
@@ -109,11 +134,17 @@ pub fn router(app: App) -> Router {
         .route("/nodes", get(nodes))
         .route("/node/{seat}", get(node))
         .route("/part/node/{seat}", get(node_part))
+        .route("/shell/{seat}", get(shell))
+        .route("/ws/node/{seat}", get(crate::ws::ws_node))
         .route("/session/{sid}", get(session))
         .route("/accounts", get(accounts))
         .route("/history", get(history))
         .route("/assets/app.css", get(css))
         .route("/assets/htmx.min.js", get(htmx))
+        .route("/assets/xterm.js", get(xterm))
+        .route("/assets/xterm-addon-fit.js", get(xterm_fit))
+        .route("/assets/xterm.css", get(xterm_css))
+        .route("/assets/term.js", get(term_js))
         .route("/healthz", get(|| async { "ok" }))
         .fallback(missing)
         .with_state(app)

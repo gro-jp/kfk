@@ -95,6 +95,7 @@ will run into its time limit, so make sure the flags allow what the task needs.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `web_addr` | `127.0.0.1:7878` | Where the web view listens. |
+| `web_shell` | `on` | `off` turns off the live terminals in the web view. They are also off whenever `web_addr` is not a loopback address. |
 | `pg_bin` | *(empty: use `PATH`)* | The directory with `initdb`, `pg_ctl` and `postgres`. |
 | `pg_port` | `54329` | Names the archive's Unix socket; no TCP port is opened. |
 | `claude_projects` | *(empty: `~/.claude/projects`)* | Where Claude Code keeps session transcripts. |

@@ -76,16 +76,17 @@ fn runs_and_sessions_read_their_transcripts_from_disk_or_the_archive() {
 fn a_node_view_shows_its_screen_queue_sessions_and_hours() {
     let w = world();
     let p = Fake::default();
-    let v = node_view(&w.s, &p, "cos").unwrap();
+    let v = node_view(&w.s, &p, true, "cos").unwrap();
+    assert!(v.term.is_ok() && node_view(&w.s, &p, false, "cos").unwrap().term.unwrap_err().contains("network address"));
     assert_eq!(v.pane, " ❯ working on T1\n  cos | Fable | ctx 10k");
     assert_eq!((v.sessions.len(), v.hours.len()), (1, 24));
     assert_eq!(v.hours.iter().filter(|h| h.1 > 0).count(), 2);
     assert_eq!(v.hours.last().unwrap().1, kfk_util::weighted(1000, 0, 0, 10));
-    let o1 = node_view(&w.s, &p, "o1").unwrap();
+    let o1 = node_view(&w.s, &p, true, "o1").unwrap();
     assert!(o1.queue.len() >= 5);
-    let o2 = node_view(&w.s, &p, "o2").unwrap();
+    let o2 = node_view(&w.s, &p, true, "o2").unwrap();
     assert_eq!((o2.pane.as_str(), o2.row.state.as_str()), ("", "stopped"));
-    assert!(node_view(&w.s, &p, "o9").err().unwrap().to_string().starts_with("no node"));
+    assert!(node_view(&w.s, &p, true, "o9").err().unwrap().to_string().starts_with("no node"));
     let all = nodes(&w.s, &p).unwrap();
     assert_eq!(all.iter().map(|(n, sp)| (n.seat.seat.as_str(), sp.turns)).collect::<Vec<_>>(), [("cos", 5), ("o1", 0), ("o2", 0)]);
     assert_eq!(pane_tail("a\n\nb\nc\n", 2), "b\nc");

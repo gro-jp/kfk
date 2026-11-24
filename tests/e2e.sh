@@ -66,7 +66,10 @@ ok "logs sync is incremental" '$K logs sync | grep -q "archived 1 new lines .* f
 ok "an archived file reads back after it is gone from disk" 'rm "$T/claude/p/sess-1.jsonl" && $K logs cat "$T/claude/p/sess-1.jsonl" | grep -q "\"partial\": *\"x\"" && ! $K logs cat /no/such/file 2>/dev/null'
 else echo "skip the log archive checks: no PostgreSQL (set KFK_PG_BIN)"; fi
 $K mizan once >/dev/null; $K status >/dev/null; $K status --json >/dev/null; $K report >/dev/null; $K seat ls >/dev/null; $K task ls >/dev/null; $K config >/dev/null
-ok "web starts and serves the overview" '$K web start | grep -qE "web (started|already running)" && sleep 1 && curl -sf http://127.0.0.1:$PORT/ | grep -q "stream one" && curl -sf http://127.0.0.1:$PORT/node/cos | grep -q "fake node: cos"'
+ok "web starts and serves the overview" '$K web start | grep -qE "web (started|already running)" && sleep 1 && curl -sf http://127.0.0.1:$PORT/ | grep -q "stream one" && curl -sf http://127.0.0.1:$PORT/node/cos | grep -q "data-term=\"cos\""'
+ok "a web terminal types into the node, both ways" '[ "$("$(dirname "$KFK_CLAUDE")/ws-type" $PORT cos "cos.settings.json" typed-in-the-web)" = typed ] && tmux -L $KFK_TMUX_SOCKET capture-pane -p -t "=kfk:=cos" | grep -q typed-in-the-web'
+ok "the terminal leaves the fleet as it found it" 'sleep 1; [ "$(tmux -L $KFK_TMUX_SOCKET list-sessions -F "#{session_name}" | grep -c .)" = 1 ] && $K status | grep -qE "^cos +up" && [ "$(tmux -L $KFK_TMUX_SOCKET show-options -t "=kfk" -v mouse 2>/dev/null)" != on ]'
+ok "a terminal is refused to another site and when switched off" '[ "$(curl -s -o /dev/null -w "%{http_code}" -H "Origin: https://evil.example" http://127.0.0.1:$PORT/ws/node/cos)" = 403 ] && $K config web_shell off >/dev/null && curl -s http://127.0.0.1:$PORT/ws/node/cos | grep -q "turned off" && $K config web_shell on >/dev/null'
 ok "web serves a run with its transcript" 'curl -sf http://127.0.0.1:$PORT/run/1 | grep -q "did it"'
 ok "web stops" '$K web stop | grep -q "web stopped" && sleep 1 && ! curl -sf -m 2 http://127.0.0.1:$PORT/healthz >/dev/null'
 ok "down" '$K down | grep -q "^down" && ! tmux -L $KFK_TMUX_SOCKET has-session -t "=kfk" 2>/dev/null'

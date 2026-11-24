@@ -10,7 +10,7 @@ if ! cargo llvm-cov --workspace --json --output-path "$out" >target/kfk-cov.log 
 fi
 python3 - "$out" <<'PY'
 import json, re, sys
-EDGE = re.compile(r"kfk-cli/|kfk-web/src/(live|serve)\.rs|kfk-engine/src/detach\.rs|kfk-mizan/src/(tmux|node|node_main|round|slot|daemon)\.rs|kfk-logs/src/(pg|sync|status|read)\.rs")
+EDGE = re.compile(r"kfk-cli/|kfk-web/src/(live|serve|ws)\.rs|kfk-term/src/pty\.rs|kfk-engine/src/detach\.rs|kfk-mizan/src/(tmux|node|node_main|round|slot|daemon)\.rs|kfk-logs/src/(pg|sync|status|read)\.rs")
 bad, core, edge = [], [0, 0], [0, 0]
 for f in json.load(open(sys.argv[1]))["data"][0]["files"]:
     name = f["filename"].split("/crates/")[-1]
