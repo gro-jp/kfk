@@ -128,3 +128,16 @@ figcaption { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
 .htmx-request { opacity: 1; }
 @media (prefers-reduced-motion: no-preference) { .bar, .hbar { transition: width .3s ease, height .3s ease; } }
 @media (max-width: 40rem) { th, td { padding: .4rem .5rem; } .brand-sub { display: none; } }
+
+/* a live terminal on a node */
+.term { margin: 1rem 0; }
+.term-bar { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; margin-bottom: .3rem; }
+.term-bar h2 { margin: 0; }
+.term-status { color: var(--muted); font-size: .85rem; margin-right: auto; }
+.term-bar button { font: inherit; font-size: .85rem; padding: .2rem .7rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); cursor: pointer; }
+.term-bar button:hover { border-color: var(--link); }
+.term-screen { height: min(70vh, 42rem); background: #14151a; border: 1px solid #33363d; border-radius: 8px; padding: .4rem; overflow: hidden; }
+.term.term-max { position: fixed; inset: 0; z-index: 50; margin: 0; padding: .5rem .6rem; background: var(--bg); display: flex; flex-direction: column; }
+.term.term-max .term-screen { flex: 1; height: auto; min-height: 0; }
+.term.term-max > .hint { display: none; }
+html.term-open { overflow: hidden; }

@@ -1,0 +1,13 @@
+[package]
+name = "kfk-term"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "kfk: a terminal on a node: who may open one, the wire messages, the tmux client on a pty"
+
+[dependencies]
+anyhow = "1"
+libc = "0.2"
+serde_json = "1"

@@ -60,7 +60,16 @@ Using several accounts is your responsibility: make sure it is allowed by the te
 
 - No authentication, no TLS.
 - Listens on `127.0.0.1` by default. Bind it elsewhere only behind something that authenticates.
-- Read-only: it has no route that changes anything.
+- The pages are read-only. The one route that changes anything is the terminal of a node
+  (`/ws/node/<seat>`): it types into that node's session, and nodes run with the permissions described above.
+- A terminal is served only when all of this holds: `web_shell` is not `off`; the server listens on a loopback
+  address; the request's `Host` names this machine (which defeats DNS rebinding); and its `Origin`, when a browser
+  sends one, is the web view itself (which stops other sites' pages). Otherwise the answer is `403` and the reason.
+- A terminal is a tmux client, so whoever can open one can do anything you can do in a shell on that machine, not
+  only talk to Claude.
+- That guard is about the network and the browser, not about local users: there is no password, so any process on
+  the machine that can open `127.0.0.1` can open a terminal. On a shared machine, run
+  `kfk config web_shell off`.
 - It shows prompts, transcripts and check output, which can contain whatever your code and tools print, including
   secrets an agent happened to display.
 

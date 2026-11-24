@@ -25,6 +25,7 @@ pub const DEFAULTS: &[(&str, &str)] = &[
     ("pg_port", "54329"),
     ("claude_projects", ""),
     ("web_addr", "127.0.0.1:7878"),
+    ("web_shell", "on"),
     ("ladder_mech", "haiku:low sonnet:medium opus:high"),
     ("ladder_impl", "sonnet:medium opus:high fable:high"),
     ("ladder_hard", "opus:high fable:high fable:xhigh"),

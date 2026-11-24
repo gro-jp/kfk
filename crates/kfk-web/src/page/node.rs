@@ -1,6 +1,7 @@
 //! the nodes, and one node drilled into
 use super::overview::nodes_table;
 use super::parts::*;
+use super::term::term_part;
 use crate::model::{account_label_short, NodeRow, NodeView};
 use kfk_store::Spend;
 use kfk_util::{ktok, stamp};
@@ -29,6 +30,7 @@ pub fn node_page(v: &NodeView) -> Markup {
     html! {
         nav.crumbs aria-label="Breadcrumb" { a href="/nodes" { "Nodes" } }
         h1 { (name) " " span.muted.small { @if v.row.seat.role == "cos" { "chief of staff" } @else { "orchestrator" } } }
+        @if v.term.is_ok() { (term_part(name, v.row.state == "up", false)) }
         div #live hx-get=(format!("/part/node/{name}")) hx-trigger="every 3s" hx-swap="innerHTML" { (node_part(v)) }
         section aria-labelledby="h-sess" {
             h2 #h-sess { "Sessions" }
@@ -52,10 +54,13 @@ pub fn node_part(v: &NodeView) -> Markup {
     let peak = v.hours.iter().map(|h| h.1).max().unwrap_or(0).max(1);
     html! {
         (nodes_table(std::slice::from_ref(&v.row)))
-        section aria-labelledby="h-now" {
-            h2 #h-now { "What it is doing now" }
-            @if v.pane.is_empty() { (empty("The node is not up, so there is no screen to show.")) }
-            @else { pre.pane aria-label="The last lines of the node's screen" { (v.pane) } }
+        @if let Err(why) = v.term {
+            section aria-labelledby="h-now" {
+                h2 #h-now { "What it is doing now" }
+                @if v.pane.is_empty() { (empty("The node is not up, so there is no screen to show.")) }
+                @else { pre.pane aria-label="The last lines of the node's screen" { (v.pane) } }
+                p.hint { (why) }
+            }
         }
         section aria-labelledby="h-queue" {
             h2 #h-queue { "Open work it owns" }

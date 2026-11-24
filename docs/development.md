@@ -81,7 +81,8 @@ except the process edges, which are listed by name in the script:
 | `kfk-cli/*` | Argument parsing and printing; exercised by the end-to-end test. |
 | `kfk-mizan/src/{tmux,node,node_main,round,slot,daemon}.rs` | tmux, long-lived child processes, the daemon loop. |
 | `kfk-logs/src/{pg,sync,status,read}.rs` | PostgreSQL. |
-| `kfk-web/src/{live,serve}.rs` | The real probe and the listening socket. |
+| `kfk-web/src/{live,serve,ws}.rs` | The real probe, the listening socket, the terminal's WebSocket. |
+| `kfk-term/src/pty.rs` | A child process on a pseudo-terminal. |
 | `kfk-engine/src/detach.rs` | A closure that runs in a forked child, where coverage cannot see. |
 
 Edges are still run by the end-to-end test and their coverage is printed, so a drop is visible. When you add logic
@@ -145,7 +146,7 @@ kfk up --dir /tmp/some-git-repo
 Cargo.toml            the workspace
 crates/               one crate per concern (see docs/architecture.md)
 roles/                cos.md, orch.md, agent.md
-tests/                e2e.sh, fake-claude, coverage.sh
+tests/                e2e.sh, fake-claude, ws-type (a WebSocket client for the terminal check), coverage.sh
 docs/                 this documentation
 install.sh
 ```

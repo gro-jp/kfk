@@ -46,7 +46,8 @@ safe.
 | `kfk-engine` | One attempt: worktree, prompt, launch, timeout, check; the task runner; the stream executor | store, stream, route, roles, token, usage, util |
 | `kfk-logs` | The PostgreSQL archive: find files, sync incrementally, read back | store, util |
 | `kfk-mizan` | Nodes in tmux, account moves, the round, the daemon, the status line | engine, logs, spend, roles, store, token, usage, util |
-| `kfk-web` | View models, Maud pages, Axum routes, the server | engine, logs, mizan, report, store, usage, util |
+| `kfk-term` | A terminal on a node: who may open one, the wire messages, a tmux client on a pty | – |
+| `kfk-web` | View models, Maud pages, Axum routes, the terminal's WebSocket, the server | engine, logs, mizan, report, store, term, usage, util |
 | `kfk-cli` | The `kfk` binary: argument parsing and one small file per command group | engine, logs, mizan, web, report, store, token, usage, util |
 
 The lower crates are pure: they take values and return values, which is why they can be held to 100% line

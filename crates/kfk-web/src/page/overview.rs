@@ -53,7 +53,7 @@ pub fn nodes_table(nodes: &[NodeRow]) -> Markup {
         @if nodes.is_empty() { (empty("No node has been started yet. Start the fleet with kfk up.")) }
         @else {
             table {
-                thead { tr { th scope="col" { "Node" } th scope="col" { "State" } th scope="col" { "Model" } th scope="col" { "Account" } th scope="col" { "Account usage" } th scope="col" { "Context" } th scope="col" { "Running" } th scope="col" { "Queued" } th scope="col" { "Blocked" } } }
+                thead { tr { th scope="col" { "Node" } th scope="col" { "State" } th scope="col" { "Model" } th scope="col" { "Account" } th scope="col" { "Account usage" } th scope="col" { "Context" } th scope="col" { "Running" } th scope="col" { "Queued" } th scope="col" { "Blocked" } th scope="col" { "Terminal" } } }
                 tbody { @for n in nodes { tr {
                     th scope="row" { a.id href=(format!("/node/{}", n.seat.seat)) { (n.seat.seat) } }
                     td { (state_badge(&n.state)) @if !n.seat.note.is_empty() && n.state == "up" { " " span.note { (n.seat.note) } } }
@@ -62,6 +62,7 @@ pub fn nodes_table(nodes: &[NodeRow]) -> Markup {
                     td { (meter(n.util, "account usage")) }
                     td { @match n.seat.ctx { Some(c) => { (meter(Some(100.0 * c as f64 / n.window.max(1) as f64), "context used before compaction")) " " span.muted { (ktok(c)) } }, None => { span.muted { "–" } } } }
                     td.num { (n.running) } td.num { (n.todo) } td.num { (n.blocked) }
+                    td { @if n.state == "up" { a href=(format!("/shell/{}", n.seat.seat)) aria-label=(format!("Open the terminal of {}", n.seat.seat)) { "Open" } } @else { span.muted { "–" } } }
                 } } }
             }
         }

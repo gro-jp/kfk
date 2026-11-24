@@ -25,7 +25,7 @@ pub fn layout(title: &str, here: &str, body: Markup) -> Markup {
                     }
                 }
                 main #main tabindex="-1" { (body) }
-                footer { "Read-only view. Commands go through cos: " code { "kfk attach" } }
+                footer { "The pages only show; a node's terminal types into its live session. In a terminal, talk to cos with " code { "kfk attach" } "." }
             }
         }
     }

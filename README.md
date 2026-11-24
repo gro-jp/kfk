@@ -123,7 +123,7 @@ mizan then picks the account with the most headroom for every session and agent.
 | [Tasks and checks](docs/tasks-and-checks.md) | Writing tasks that pass first time; dependencies; escalation |
 | [Accounts](docs/accounts.md) | The pool, sign-in, usage windows, rotation |
 | [mizan](docs/mizan.md) | What the zero-LLM layer does each round |
-| [Web interface](docs/web.md) | The read-only view and its pages |
+| [Web interface](docs/web.md) | The pages, and the live terminal on each node |
 | [Log archive](docs/logs.md) | Keeping every transcript in PostgreSQL |
 | [Commands](docs/commands.md) | Every command, flag and exit status |
 | [Configuration](docs/configuration.md) | Every config key and environment variable |
@@ -140,7 +140,8 @@ Version 0.1.0. kfk is young: it has run real goals end to end on macOS with a po
 streams so far. Known gaps:
 
 - **macOS only.** The token vault is the Keychain.
-- **The web interface is read-only.** Control goes through cos or the CLI.
+- **The web interface acts only through terminals.** Each node has a live terminal in the browser; there are no
+  buttons for tasks or accounts yet. Those go through cos or the CLI.
 - **Nothing restarts kfk after a reboot.** Run `kfk up` again; cos resumes its conversation.
 - **Coordination is still the larger share of tokens on small tasks.** In the first pilots, eight micro-tasks all
   passed on the first attempt, at about 24k weighted tokens each for the agents, while cos and the orchestrators
@@ -159,8 +160,9 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in kfk by you, as
 defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
-kfk bundles [htmx](https://htmx.org) (`crates/kfk-web/src/assets/htmx.min.js`), which is distributed under its own
-license (Zero-Clause BSD).
+kfk bundles two libraries in `crates/kfk-web/src/assets/`, each distributed under its own license:
+[htmx](https://htmx.org) (`htmx.min.js`, Zero-Clause BSD) and [xterm.js](https://xtermjs.org) 6.0.0 with its fit
+addon 0.11.0 (`xterm.js`, `xterm.css`, `xterm-addon-fit.js`; MIT, see `XTERM-LICENSE`).
 
 kfk is an independent project. It is not made or endorsed by Anthropic. Claude and Claude Code are products of
 Anthropic.
