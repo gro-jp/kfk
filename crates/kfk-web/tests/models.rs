@@ -77,8 +77,10 @@ fn a_node_view_shows_its_screen_queue_sessions_and_hours() {
     let w = world();
     let p = Fake::default();
     let v = node_view(&w.s, &p, true, "cos").unwrap();
-    assert!(v.term.is_ok() && node_view(&w.s, &p, false, "cos").unwrap().term.unwrap_err().contains("network address"));
-    assert_eq!(v.pane, " ❯ working on T1\n  cos | Fable | ctx 10k");
+    assert!(v.term.is_ok() && v.pane.is_empty()); // a live terminal: no still picture is taken
+    let still = node_view(&w.s, &p, false, "cos").unwrap();
+    assert!(still.term.unwrap_err().contains("network address"));
+    assert_eq!(still.pane, " ❯ working on T1\n  cos | Fable | ctx 10k");
     assert_eq!((v.sessions.len(), v.hours.len()), (1, 24));
     assert_eq!(v.hours.iter().filter(|h| h.1 > 0).count(), 2);
     assert_eq!(v.hours.last().unwrap().1, kfk_util::weighted(1000, 0, 0, 10));

@@ -7,7 +7,7 @@ use kfk_util::now;
 
 pub struct NodeView {
     pub row: NodeRow,
-    /// the last lines of its pane; empty when it is not up
+    /// the last lines of its pane; empty when it is not up, and when the page holds a live terminal instead
     pub pane: String,
     /// whether the page may hold a live terminal; the reason when not
     pub term: Result<(), &'static str>,
@@ -32,7 +32,9 @@ pub fn fill_hours(spent: &[(i64, i64)], first: i64, last: i64) -> Vec<(i64, i64)
 pub fn node_view(s: &Store, p: &dyn Probe, local: bool, name: &str) -> Result<NodeView> {
     let seat = s.seat(name)?.ok_or_else(|| anyhow!("no node {name}"))?;
     let row = node_row(s, p, seat)?;
-    let pane = if row.state == "up" { pane_tail(&p.pane(s, name), 40) } else { String::new() };
+    let term = crate::shell::shell_usable(s, local);
+    // the still picture is only for a page that cannot hold the live terminal
+    let pane = if row.state == "up" && term.is_err() { pane_tail(&p.pane(s, name), 40) } else { String::new() };
     let queue = s.tasks(&TaskFilter { owner: Some(name.into()), open: true, limit: 200, ..Default::default() })?.into_iter().map(|t| card(s, t)).collect::<Result<Vec<_>>>()?;
     let mut sessions = vec![];
     for se in s.sessions(false)?.into_iter().filter(|x| x.seat == name) {
@@ -41,7 +43,7 @@ pub fn node_view(s: &Store, p: &dyn Probe, local: bool, name: &str) -> Result<No
     }
     let last = (now() / 3600.0) as i64;
     let spent: Vec<(i64, i64)> = s.spend_by_hour(name, (last - 23) as f64 * 3600.0)?.iter().map(|(h, x)| (*h, x.weighted())).collect();
-    Ok(NodeView { row, pane, term: crate::shell::shell_usable(s, local), queue, sessions, hours: fill_hours(&spent, last - 23, last) })
+    Ok(NodeView { row, pane, term, queue, sessions, hours: fill_hours(&spent, last - 23, last) })
 }
 
 pub fn nodes(s: &Store, p: &dyn Probe) -> Result<Vec<(NodeRow, Spend)>> {
